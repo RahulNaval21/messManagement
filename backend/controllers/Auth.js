@@ -174,10 +174,10 @@ exports.sendotp = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Check if user is already present
-    // Find user with provided email
+   // Check if user is already present
+    //Find user with provided email
     const checkUserPresent = await User.findOne({ email });
-    // to be used in case of signup
+    //to be used in case of signup
 
     // If user found with provided email
     if (checkUserPresent) {
@@ -216,9 +216,55 @@ exports.sendotp = async (req, res) => {
   }
 };
 
-// Controller for Changing Password
+// Controller for changing Password
 exports.changePassword = async (req, res) => {
   try {
+    const {email,otp,newPassword,confirmNewPassword} = req.body;
+    const user = await User.findOne({ email }).populate("additionalDetails");;
+
+    // If user not found with provided email
+    if (!user) {
+      // Return 401 Unauthorized status code with error message
+      return res.status(401).json({
+        success: false,
+        message: "User not registered"
+      });
+    }
+
+
+     // Check if password and confirm password match
+     if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Password and Confirm Password do not match. Please try again.",
+      });
+    }
+    // Find the most recent OTP for the email
+    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
+    console.log(response);
+    if (response.length === 0) {
+      // OTP not found for the email
+      return res.status(400).json({
+        success: false,
+        message: "The OTP is not valid",
+      });
+    } else if (otp !== response[0].otp) {
+      // Invalid OTP
+      return res.status(400).json({
+        success: false,
+        message: "The OTP is not valid",
+      });
+    }
+
+    // Hash the new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await User.updateOne({email},{password: hashedNewPassword});
+    return res.status(200).json({
+      success: true,
+      message: "Password Changed Successfully!",
+    });
+
   } catch (error) {
     // If there's an error updating the password, log the error and return a 500 (Internal Server Error) error
     console.error("Error occurred while updating password:", error);
