@@ -176,17 +176,17 @@ exports.sendotp = async (req, res) => {
 
    // Check if user is already present
     //Find user with provided email
-    const checkUserPresent = await User.findOne({ email });
+    // const checkUserPresent = await User.findOne({ email });
     //to be used in case of signup
 
     // If user found with provided email
-    if (checkUserPresent) {
-      // Return 401 Unauthorized status code with error message
-      return res.status(401).json({
-        success: false,
-        message: `User is Already Registered`,
-      });
-    }
+    // if (checkUserPresent) {
+    //   // Return 401 Unauthorized status code with error message
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: `User is Already Registered`,
+    //   });
+    // }
 
     var otp = otpGenerator.generate(6, {
       upperCaseAlphabets: false,
