@@ -5,7 +5,7 @@ const {
   login,
   signup,
   sendotp,
-  changePassword,
+  changepassword,
 } = require("../controllers/Auth");
 
 const {
@@ -31,7 +31,7 @@ router.post("/signup", signup);
 router.post("/sendotp", sendotp);
 
 // Route for Changing the password
-router.post("/changepassword", auth, changePassword);
+router.post("/changepassword", auth, changepassword);
 
 // ********************************************************************************************************
 //                                      Reset Password
