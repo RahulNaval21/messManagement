@@ -3,6 +3,8 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
+const mailSender = require("../utils/mailSender");
+const { passwordUpdated } = require("../mailTemplates/passwordUpdate");
 const Profile = require("../models/Profile");
 require("dotenv").config();
 
@@ -174,7 +176,7 @@ exports.sendotp = async (req, res) => {
   try {
     const { email } = req.body;
 
-   // Check if user is already present
+    // Check if user is already present
     //Find user with provided email
     const checkUserPresent = await User.findOne({ email });
     //to be used in case of signup
@@ -193,7 +195,8 @@ exports.sendotp = async (req, res) => {
       lowerCaseAlphabets: false,
       specialChars: false,
     });
-    const result = await OTP.findOne({ otp: otp });
+    let result = await OTP.findOne({ otp: otp });
+
     console.log("Result is Generate OTP Func");
     console.log("OTP", otp);
     console.log("Result", result);
@@ -201,6 +204,7 @@ exports.sendotp = async (req, res) => {
       otp = otpGenerator.generate(6, {
         upperCaseAlphabets: false,
       });
+      result = await OTP.findOne({ otp: otp });
     }
     const otpPayload = { email, otp };
     const otpBody = await OTP.create(otpPayload);
@@ -209,6 +213,7 @@ exports.sendotp = async (req, res) => {
       success: true,
       message: `OTP Sent Successfully`,
       otp,
+      result,
     });
   } catch (error) {
     console.log(error.message);
@@ -217,54 +222,59 @@ exports.sendotp = async (req, res) => {
 };
 
 // Controller for changing Password
-exports.changePassword = async (req, res) => {
+exports.changepassword = async (req, res) => {
   try {
-    const {email,otp,newPassword,confirmNewPassword} = req.body;
-    const user = await User.findOne({ email }).populate("additionalDetails");;
+    // Get user data from req.user
+    const userDetails = await User.findById(req.user.id);
 
-    // If user not found with provided email
-    if (!user) {
-      // Return 401 Unauthorized status code with error message
-      return res.status(401).json({
+    // Get old password, new password, and confirm new password from req.body
+    const { oldPassword, newPassword } = req.body;
+
+    // Validate old password
+    const isPasswordMatch = await bcrypt.compare(
+      oldPassword,
+      userDetails.password
+    );
+    if (!isPasswordMatch) {
+      // If old password does not match, return a 401 (Unauthorized) error
+      return res
+        .status(401)
+        .json({ success: false, message: "The password is incorrect" });
+    }
+
+    // Update password
+    const encryptedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUserDetails = await User.findByIdAndUpdate(
+      req.user.id,
+      { password: encryptedPassword },
+      { new: true }
+    );
+
+    // Send notification email
+    try {
+      const emailResponse = await mailSender(
+        updatedUserDetails.email,
+        "Password for your account has been updated",
+        passwordUpdated(
+          updatedUserDetails.email,
+          `Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
+        )
+      );
+      console.log("Email sent successfully:", emailResponse.response);
+    } catch (error) {
+      // If there's an error sending the email, log the error and return a 500 (Internal Server Error) error
+      console.error("Error occurred while sending email:", error);
+      return res.status(500).json({
         success: false,
-        message: "User not registered"
+        message: "Error occurred while sending email",
+        error: error.message,
       });
     }
 
-
-     // Check if password and confirm password match
-     if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Password and Confirm Password do not match. Please try again.",
-      });
-    }
-    // Find the most recent OTP for the email
-    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-    console.log(response);
-    if (response.length === 0) {
-      // OTP not found for the email
-      return res.status(400).json({
-        success: false,
-        message: "The OTP is not valid",
-      });
-    } else if (otp !== response[0].otp) {
-      // Invalid OTP
-      return res.status(400).json({
-        success: false,
-        message: "The OTP is not valid",
-      });
-    }
-
-    // Hash the new password
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    await User.updateOne({email},{password: hashedNewPassword});
-    return res.status(200).json({
-      success: true,
-      message: "Password Changed Successfully!",
-    });
-
+    // Return success response
+    return res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
   } catch (error) {
     // If there's an error updating the password, log the error and return a 500 (Internal Server Error) error
     console.error("Error occurred while updating password:", error);
