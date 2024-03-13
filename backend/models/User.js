@@ -37,9 +37,10 @@ const userSchema = new mongoose.Schema(
     image: {
       type: String,
     },
-    creditPoints:{
-      type: Number
-    }
+    creditPoints: {
+      type: Number,
+      required: true,
+    },
   },
   { timestamps: true }
 );
