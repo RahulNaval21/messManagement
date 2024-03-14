@@ -46,7 +46,7 @@ router.post("/reset-password-token", resetPasswordToken);
 router.post("/reset-password", resetPassword);
 
 // Route for registering a meal
-router.post("/registerMeal", registerMeal);
+router.post("/registerMeal",auth, registerMeal);
 
 // Export the router for use in the main application
 module.exports = router;
