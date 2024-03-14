@@ -22,7 +22,12 @@ const mealSchema = new mongoose.Schema(
         additionalItems:{
             type: mongoose.Schema.Types.ObjectId,
             ref: "extraItems"
-        }
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now,
+            expires: 60 * 60 * 12,
+          }
     }
 );
 
