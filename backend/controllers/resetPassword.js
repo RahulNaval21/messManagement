@@ -2,6 +2,7 @@ const User = require("../models/User");
 const mailSender = require("../utils/mailSender");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const {body, validationResult} = require('express-validator');
 
 exports.resetPasswordToken = async (req, res) => {
   try {
@@ -48,6 +49,11 @@ exports.resetPasswordToken = async (req, res) => {
 };
 
 exports.resetPassword = async (req, res) => {
+  //If errors , this will print the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { password, confirmPassword, token } = req.body;
 
