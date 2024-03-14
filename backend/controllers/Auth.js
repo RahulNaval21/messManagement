@@ -7,9 +7,14 @@ const mailSender = require("../utils/mailSender");
 const { passwordUpdated } = require("../mailTemplates/passwordUpdate");
 const Profile = require("../models/Profile");
 require("dotenv").config();
-
+const {body, validationResult} = require('express-validator');
 // Controller for Signup
 exports.signup = async (req, res) => {
+  //If errors , this will print the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     // Destructure fields from the request body
     const {
@@ -106,6 +111,11 @@ exports.signup = async (req, res) => {
 
 // Controller for Login
 exports.login = async (req, res) => {
+  //If errors , this will print the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     // Get email and password from request body
     const { email, password } = req.body;
@@ -223,6 +233,11 @@ exports.sendotp = async (req, res) => {
 
 // Controller for changing Password
 exports.changepassword = async (req, res) => {
+  //If errors , this will print the errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     // Get user data from req.user
     const userDetails = await User.findById(req.user.id);

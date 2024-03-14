@@ -1,6 +1,8 @@
 const User = require("../models/User");
 const Meals = require("../models/Meals");
 
+const mailSender = require("../utils/mailSender");
+const {registered} = require("../mailTemplates/registered")
 exports.registerMeal = async (req, res) => {
   // try {
   //   let creditPoints = req.body.creditPoints;
@@ -30,13 +32,13 @@ exports.registerMeal = async (req, res) => {
 
   try{
     const userDetails = await User.findById(req.user.id);
-    const userEmail= userDetails.email;
+    const userEmail = userDetails.email;
 const {mealType,mealPrice} = req.body;
 const date = new Date();
-const findUser =  await Meals.findOne({userEmail});
-console.log(findUser.email," ",findUser.mealType);
+const findUser =  await Meals.findOne({email:userEmail});
+console.log("email",userEmail);
 if(findUser){
-    if(findUser.mealType==mealType){
+    if(findUser.mealType===mealType){
     return res.status(400).json({
         success: false,
         message: "You have already registered for meal"
