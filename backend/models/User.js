@@ -40,6 +40,7 @@ const userSchema = new mongoose.Schema(
     creditPoints: {
       type: Number,
       required: true,
+      default: 150,
     },
   },
   { timestamps: true }

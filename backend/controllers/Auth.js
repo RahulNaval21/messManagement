@@ -7,7 +7,7 @@ const mailSender = require("../utils/mailSender");
 const { passwordUpdated } = require("../mailTemplates/passwordUpdate");
 const Profile = require("../models/Profile");
 require("dotenv").config();
-const {body, validationResult} = require('express-validator');
+const { body, validationResult } = require("express-validator");
 // Controller for Signup
 exports.signup = async (req, res) => {
   //If errors , this will print the errors
@@ -93,6 +93,28 @@ exports.signup = async (req, res) => {
       password: hashedPassword,
       additionalDetails: profileDetails._id,
       image: "",
+    });
+
+    const token = jwt.sign(
+      { email: user.email, id: user._id },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "24h",
+      }
+    );
+
+    // Save token to user document in database
+    user.password = undefined;
+    // Set cookie for token and return success response
+    const options = {
+      expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+    };
+    res.cookie("token", token, options).status(200).json({
+      success: true,
+      token,
+      user,
+      message: `User Login Success`,
     });
 
     return res.status(200).json({
