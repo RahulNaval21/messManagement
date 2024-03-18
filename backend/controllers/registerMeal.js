@@ -3,6 +3,7 @@ const Meals = require("../models/Meals");
 
 const mailSender = require("../utils/mailSender");
 const { registered } = require("../mailTemplates/registered");
+const { capturePayment } = require("./payment");
 exports.registerMeal = async (req, res) => {
   // try {
   //   let creditPoints = req.body.creditPoints;
@@ -31,8 +32,6 @@ exports.registerMeal = async (req, res) => {
 
   try {
     const userDetails = await User.findById(req.user.id);
-    const cookie = req.cookies;
-    console.log(cookie);
 
     const userEmail = userDetails.email;
     const { mealType, mealPrice } = req.body;
@@ -53,6 +52,15 @@ exports.registerMeal = async (req, res) => {
       return res
         .status(401)
         .json({ success: false, message: "Not enough credits to buy meal" });
+    }
+
+    if (capturePayment) {
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Error occurred while sending mail",
+        error: error.message,
+      });
     }
 
     credits = credits - mealPrice;
