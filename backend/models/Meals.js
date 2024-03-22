@@ -7,7 +7,7 @@ const mealSchema = new mongoose.Schema({
     trim: true,
   },
   dateOfMeal: {
-    type: Date,
+    type: String,
     required: true,
   },
   mealType: {
@@ -26,7 +26,7 @@ const mealSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 60 * 60 * 12,
+    expires: 60 * 60 * 24,
   },
 });
 
