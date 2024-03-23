@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const Meals = require("../models/Meals");
-
+const DailyMeals = require("../models/DailyMeals");
 const mailSender = require("../utils/mailSender");
 const { registered } = require("../mailTemplates/registered");
 const { capturePayment } = require("./payment");
@@ -36,6 +36,7 @@ exports.registerMeal = async (req, res) => {
     const userEmail = userDetails.email;
     const { mealType, mealPrice } = req.body;
     const date = new Date();
+    const today = date.toISOString().slice(0,10);
     const findUser = await Meals.findOne({ email: userEmail });
     console.log("email", userEmail);
     if (findUser) {
@@ -72,10 +73,25 @@ exports.registerMeal = async (req, res) => {
 
     const newRegisteredMeal = await Meals.create({
       email: userDetails.email,
-      dateOfMeal: date.getDate(),
+      dateOfMeal: today,
       mealType: mealType,
-      mealPrice: mealPrice,
+      mealPrice: mealPrice
     });
+    let registeredMess = await DailyMeals.findOne({messname: userDetails.mess, mealType: mealType});
+    if(!registeredMess){
+      registeredMess = await DailyMeals.create({
+        messname: userDetails.mess,
+        dateOfMeal: today,
+        mealType: mealType,
+        mealquantity: 1
+      });
+    }else{
+      const count = registeredMess.mealquantity+1;
+      const id = registeredMess._id;
+      const updating = await DailyMeals.findByIdAndUpdate(id,{mealquantity:count});
+    };
+
+
     try {
       const emailResponse = await mailSender(
         updatedUserDetails.email,

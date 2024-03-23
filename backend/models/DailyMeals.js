@@ -3,20 +3,21 @@ const mongoose = require('mongoose');
 const dailyMeals = new mongoose.Schema({
     messname:{
         type: String,
-        required:true
     },
     dateOfMeal: {
-        type: Date,
-        required: true,
+        type: String,
       },
       mealType: {
         type: String,
-        required: true,
       },
       mealquantity: {
         type: Number,
-        required: true,
-        default: 0,
+        required: true
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+        expires: 60 * 5 *60,
       }
 });
 

@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: 150,
     },
+    mess:{
+      type: String,
+      default: 'nitw'
+    }
   },
   { timestamps: true }
 );
